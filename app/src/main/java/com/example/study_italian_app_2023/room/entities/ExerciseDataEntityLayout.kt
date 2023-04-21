@@ -26,9 +26,6 @@ class ExerciseDataEntityLayout(
     @ColumnInfo(name = "b4")
     val b4: String? = null,
 
-//    @ColumnInfo(name = "currentCount")
-//    val currentCount: Int? = null,
-
     @ColumnInfo(name = "correct")
     val correct: String? = null,
 
