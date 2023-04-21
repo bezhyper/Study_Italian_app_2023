@@ -1,70 +1,66 @@
 package com.example.study_italian_app_2023
 
-import android.content.Intent
-import android.os.Bundle
 import android.widget.Button
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.*
-import com.example.study_italian_app_2023.activities.MainActivity
-import com.example.study_italian_app_2023.activities.ThirdActivity
 import com.example.study_italian_app_2023.retrofit.entities.DataApi
 import com.example.study_italian_app_2023.retrofit.entities.ExerciseDataEntityRetrofit
 import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityLayout
 import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityRoom
 import com.example.study_italian_app_2023.room.entities.MainDataBase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 //private val exercisesFunctions: ExercisesFunctions, database: MainDataBase - поместить в конструктор что ниже
-class MainViewModel(database: MainDataBase, val repository: DataApi, private val exercisesFunctions: ExercisesFunctions) : ViewModel() {
+class MainViewModel(
+    database: MainDataBase,
+    val repository: DataApi,
+    private val exercisesFunctions: ExercisesFunctions
+) : ViewModel() {
 
     val dao = database.getDao()
 
 
-
-
-    private var _index = MutableLiveData<Int>()
+    private var _index = MutableLiveData<Int>(1)
     var index: LiveData<Int> = _index
 
 
     private var _exercise = MutableLiveData<ExerciseDataEntityRetrofit>()
     var exercise: LiveData<ExerciseDataEntityRetrofit> = _exercise
 
+    private var _exerciseLayout = MutableLiveData<ExerciseDataEntityLayout>()
+    var exerciseLayout: LiveData<ExerciseDataEntityLayout> = _exerciseLayout
 
+//    private var _count = MutableLiveData<Int?>()
+//    var count: LiveData<Int?> = _count
 
+    private val test = _index.observeForever {
 
+       val count = dao.getExerciseWithoutFlow().count
 
+        if(_index.value == count!!.plus(1) )
+        getAndLayoutNewExercise()
+        else
+            getAndLayoutExercise(_index.value!!)
 
+    }
 
-    private val test =  _index.observeForever {
-
+    private fun getAndLayoutExercise(_index: Int) {
         viewModelScope.launch {
-            val exerciseDataRepository =  repository.getRandomExercise(1)
-            val exerciseDataRoom = exerciseDataRepository.toExerciseData()
-
-            dao.insertExerciseData(exerciseDataRoom)
-            _exercise.value = exerciseDataRepository
+            dao.getPrevExercise(_index)
         }
-
     }
 
 
-
-
-
-
-    fun onButtonAnswerPressed(currentAnswerButton: Button){
-    exercisesFunctions.onButtonAnswerPressed(currentAnswerButton)
+    fun onButtonAnswerPressed(currentAnswerButton: Button) {
+        exercisesFunctions.onButtonAnswerPressed(currentAnswerButton)
 
     }
 
-    fun onButtonNextExPressed(){
+    fun onButtonNextExPressed() {
         exercisesFunctions.onButtonNextExPressed(_index)
 
     }
 
-    fun onButtonPrevExPressed(){
+    fun onButtonPrevExPressed() {
         exercisesFunctions.onButtonPrevExPressed(_index)
 
 
@@ -93,27 +89,88 @@ class MainViewModel(database: MainDataBase, val repository: DataApi, private val
         }
     }
 
-    fun getExercise() {
+    fun getAndLayoutNewExercise() {
         viewModelScope.launch {
-           val exerciseDataRepository =  repository.getRandomExercise(1)
+            val exerciseDataRepository = repository.getRandomExercise(1)
             val exerciseDataRoom = exerciseDataRepository.toExerciseData()
 
+
+
             dao.insertExerciseData(exerciseDataRoom)
-            _exercise.value = exerciseDataRepository
+
+
+
+            insertDataInEntityLayout(exerciseDataRoom)
 
         }
     }
 
-class MainViewModelFactory(val database: MainDataBase, val repository: DataApi, private val exercisesFunctions: ExercisesFunctions) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if(modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            //, database поместить в конструктор ниже
-            return MainViewModel(database, repository, exercisesFunctions) as T
+    private fun insertDataInEntityLayout(exerciseDataRoom: ExerciseDataEntityRoom) {
+        viewModelScope.launch {
+            val listAnswers = createListAnswers(exerciseDataRoom)
+
+            val b1 = getRandomAnswer(listAnswers)
+            val b2 = getRandomAnswer(listAnswers)
+            val b3 = getRandomAnswer(listAnswers)
+            val b4 = getRandomAnswer(listAnswers)
+
+
+            val exercise = ExerciseDataEntityLayout(
+                sentens = exerciseDataRoom.sentens,
+                b1 = b1,
+                b2 = b2,
+                b3 = b3,
+                b4 = b4,
+                correct = exerciseDataRoom.correct
+            )
+
+            dao.insertExerciseDataLayout(exercise)
+
+            _exerciseLayout.value = exercise
+
+
         }
-        throw IllegalArgumentException("Unknown ViewModelClass")
+
     }
-}
+
+    private fun createListAnswers(exerciseDataRoom: ExerciseDataEntityRoom) =
+        mutableListOf(
+            exerciseDataRoom.wrong_1,
+            exerciseDataRoom.wrong_2,
+            exerciseDataRoom.wrong_3,
+            exerciseDataRoom.correct
+        )
+
+
+    private fun getRandomAnswer(listAnswers: MutableList<String>) = runBlocking {
+
+
+        val answer = async {
+
+            val randomAnswer = listAnswers.shuffled().last()
+
+            listAnswers.remove(randomAnswer)
+            return@async randomAnswer
+
+        }.await()
+        return@runBlocking answer
+
+    }
+
+    class MainViewModelFactory(
+        val database: MainDataBase,
+        val repository: DataApi,
+        private val exercisesFunctions: ExercisesFunctions
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                //, database поместить в конструктор ниже
+                return MainViewModel(database, repository, exercisesFunctions) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModelClass")
+        }
+    }
 
 
 }

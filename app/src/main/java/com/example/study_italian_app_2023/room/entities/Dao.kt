@@ -27,6 +27,11 @@ interface Dao {
     fun getPrevExercise(i: Int): ExerciseDataInTuple
 
 
+
+
+
+
+
     @Query("SELECT * FROM layout  WHERE count = :i")
     fun getExerciseLayout(i: Int): ExerciseDataEntityLayout
 

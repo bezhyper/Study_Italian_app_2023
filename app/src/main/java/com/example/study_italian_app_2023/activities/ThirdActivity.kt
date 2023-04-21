@@ -36,44 +36,36 @@ class ThirdActivity : AppCompatActivity() {
 
 
 
-        mainViewModel.exercise.observe(this, Observer {
-
-            bindingClass.textSentence.text = mainViewModel.exercise.value?.sentens
-            bindingClass.buttonAnswer1.text = mainViewModel.exercise.value?.wrong_1
-            bindingClass.buttonAnswer2.text = mainViewModel.exercise.value?.wrong_2
-            bindingClass.buttonAnswer3.text = mainViewModel.exercise.value?.wrong_3
-            bindingClass.buttonAnswer4.text = mainViewModel.exercise.value?.correct
+        mainViewModel.exerciseLayout.observe(this, Observer {
 
 
 
+            bindingClass.textSentence.text = mainViewModel.exerciseLayout.value!!.sentens
 
-
-//            bindingClass.textSentence.text = mainViewModel.exercise.value?.sentens
-//            bindingClass.buttonAnswer1.text = mainViewModel.exercise.value?.b1
-//            bindingClass.buttonAnswer2.text = mainViewModel.exercise.value?.b2
-//            bindingClass.buttonAnswer3.text = mainViewModel.exercise.value?.b3
-//            bindingClass.buttonAnswer4.text = mainViewModel.exercise.value?.b4
-
-//            if (mainViewModel.exercise.value.chosen_answer == mainViewModel.exercise.value.correct) {
-//// ВЫДЕЛЯТЬ ПРАВИЛЬНЫЙ ЗЕЛЕНЫМ ЦВЕТОМ
-//
-//
-//            } else {
-//// ВЫДЕЛЯТЬ ПРАВИЛЬНЫЙ ПУНКТИРНОЙ ЗЕЛЕНОЙ ЛИНИЕЙ, НЕПРАВИЛЬНЫЙ КРАСНЫМ
-//
-//
-//            }
+            bindingClass.buttonAnswer1.text = mainViewModel.exerciseLayout.value!!.b1
+            bindingClass.buttonAnswer2.text = mainViewModel.exerciseLayout.value!!.b2
+            bindingClass.buttonAnswer3.text = mainViewModel.exerciseLayout.value!!.b3
+            bindingClass.buttonAnswer4.text = mainViewModel.exerciseLayout.value!!.b4
 
 
         })
 
+        mainViewModel.index.observe(this){
+
+            bindingClass.answerCheck.text = it.toString()
+
+
+            if (it != 1){
+                bindingClass.buttonPrevEx.visibility = View.VISIBLE
+            }else {
+                bindingClass.buttonPrevEx.visibility = View.GONE
+            }
+        }
+
+        mainViewModel.getAndLayoutNewExercise()
 
     }
 
-    override fun onStart() {
-        super.onStart()
-        mainViewModel.getExercise()
-    }
 
 
     private val buttonAnswerListener = View.OnClickListener() {

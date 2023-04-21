@@ -18,14 +18,14 @@ class ExercisesFunctions {
 
 
     fun onButtonPrevExPressed(_index: MutableLiveData<Int>) {
-        i++
+        i--
         _index.value = i
 
     }
 
 
     fun onButtonNextExPressed(_index: MutableLiveData<Int>) {
-        i--
+        i++
         _index.value = i
     }
 
