@@ -1,22 +1,26 @@
 package com.example.study_italian_app_2023.activities
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Color.*
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.forEach
-import androidx.lifecycle.Observer
+//import androidx.lifecycle.Observer
 import com.example.study_italian_app_2023.ExercisesFunctions
 import com.example.study_italian_app_2023.MainViewModel
 import com.example.study_italian_app_2023.R
 import com.example.study_italian_app_2023.databinding.ActivityThirdBinding
 
+
 class ThirdActivity : AppCompatActivity() {
-    lateinit var bindingClass: ActivityThirdBinding
+    private lateinit var bindingClass: ActivityThirdBinding
     private val mainViewModel: MainViewModel by viewModels {
-        MainViewModel.MainViewModelFactory((applicationContext as MainApp).database,
+        MainViewModel.MainViewModelFactory(
+            (applicationContext as MainApp).database,
             (applicationContext as MainApp).repository,
             exercisesFunctions = ExercisesFunctions()
         )
@@ -36,8 +40,7 @@ class ThirdActivity : AppCompatActivity() {
 
 
 
-        mainViewModel.exerciseLayout.observe(this, Observer {
-
+        mainViewModel.exerciseLayout.observe(this) {
 
 
             bindingClass.textSentence.text = mainViewModel.exerciseLayout.value!!.sentens
@@ -47,28 +50,38 @@ class ThirdActivity : AppCompatActivity() {
             bindingClass.buttonAnswer3.text = mainViewModel.exerciseLayout.value!!.b3
             bindingClass.buttonAnswer4.text = mainViewModel.exerciseLayout.value!!.b4
 
+        }
 
-        })
 
-        mainViewModel.index.observe(this){
+
+
+        mainViewModel.index.observe(this) {
 
             bindingClass.answerCheck.text = it.toString()
 
 
-            if (it != 1){
+            if (it != 1) {
                 bindingClass.buttonPrevEx.visibility = View.VISIBLE
-            }else {
+            } else {
                 bindingClass.buttonPrevEx.visibility = View.GONE
             }
+
+
         }
 
-        mainViewModel.getAndLayoutNewExercise()
+
+
+
+
+
+
+
+//        mainViewModel.getAndLayoutNewExercise()
 
     }
 
 
-
-    private val buttonAnswerListener = View.OnClickListener() {
+    private val buttonAnswerListener = View.OnClickListener {
 
         when (it.id) {
 

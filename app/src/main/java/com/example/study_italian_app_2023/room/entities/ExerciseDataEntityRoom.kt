@@ -40,6 +40,33 @@ data class ExerciseDataEntityRoom(
     val is_answer_correct: Int? = null
 
 
-)
+) {
+//    fun toExerciseDataLayout(): ExerciseDataEntityLayout = ExerciseDataEntityLayout(
+//
+//        count = count,
+//
+//        sentens = sentens,
+//
+//        b1 = null,
+//
+//
+//        b2 = null,
+//
+//
+//        b3 = null,
+//
+//        b4 = null,
+//
+//        correct = correct,
+//
+//        chosen_answer = chosen_answer,
+//
+//        is_answer_correct = is_answer_correct
+//
+//
+//    )
+
+
+}
 
 

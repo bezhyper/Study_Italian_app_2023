@@ -1,12 +1,13 @@
 package com.example.study_italian_app_2023
 
+import android.graphics.Color
 import android.widget.Button
 import androidx.lifecycle.*
 import com.example.study_italian_app_2023.retrofit.entities.DataApi
-import com.example.study_italian_app_2023.retrofit.entities.ExerciseDataEntityRetrofit
 import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityLayout
 import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityRoom
 import com.example.study_italian_app_2023.room.entities.MainDataBase
+import com.example.study_italian_app_2023.room.entities.UpdateExerciseDataInTuple
 import kotlinx.coroutines.*
 
 //private val exercisesFunctions: ExercisesFunctions, database: MainDataBase - поместить в конструктор что ниже
@@ -16,28 +17,33 @@ class MainViewModel(
     private val exercisesFunctions: ExercisesFunctions
 ) : ViewModel() {
 
-    val dao = database.getDao()
+    private val dao = database.getDao()
+
+    private val indexStart = 1
 
 
-    private var _index = MutableLiveData<Int>(1)
+
+//    private var _chosenAnswersList = MutableLiveData<List<Button>>()
+//    var chosenAnswerList : LiveData<List<Button>> = _chosenAnswersList
+
+
+    private var _index = MutableLiveData<Int>().apply { value = 1 }
     var index: LiveData<Int> = _index
 
-
-    private var _exercise = MutableLiveData<ExerciseDataEntityRetrofit>()
-    var exercise: LiveData<ExerciseDataEntityRetrofit> = _exercise
 
     private var _exerciseLayout = MutableLiveData<ExerciseDataEntityLayout>()
     var exerciseLayout: LiveData<ExerciseDataEntityLayout> = _exerciseLayout
 
-//    private var _count = MutableLiveData<Int?>()
-//    var count: LiveData<Int?> = _count
+
+
 
     private val test = _index.observeForever {
 
-       val count = dao.getExerciseWithoutFlow().count
+        val count = dao.getExerciseWithoutFlow()?.count ?: 0
 
-        if(_index.value == count!!.plus(1) )
-        getAndLayoutNewExercise()
+        if ((_index.value == count.plus(1)))
+            getAndLayoutNewExercise()
+
         else
             getAndLayoutExercise(_index.value!!)
 
@@ -45,14 +51,57 @@ class MainViewModel(
 
     private fun getAndLayoutExercise(_index: Int) {
         viewModelScope.launch {
-            dao.getPrevExercise(_index)
+//            _chosenAnswersList?.value.
+
+            val exercise = dao.getExercise(_index)
+
+            _exerciseLayout.value = exercise
+
         }
     }
 
 
-    fun onButtonAnswerPressed(currentAnswerButton: Button) {
-        exercisesFunctions.onButtonAnswerPressed(currentAnswerButton)
 
+
+    fun onButtonAnswerPressed(currentAnswerButton: Button) {
+        checkAnswer(currentAnswerButton, _index.value!!)
+
+
+
+
+
+
+
+
+    }
+
+    private fun checkAnswer(currentAnswerButton: Button, _index: Int) {
+        viewModelScope.launch {
+            val updatedData : UpdateExerciseDataInTuple
+            val exercise = dao.getExercise(_index)
+
+            if (currentAnswerButton.text == exercise.correct) {
+
+                updatedData = UpdateExerciseDataInTuple(
+                    count = exercise.count,
+                    chosen_answer = currentAnswerButton.text.toString(),
+                    is_answer_correct = 1
+                )
+            }else{
+                updatedData = UpdateExerciseDataInTuple(
+                    count = exercise.count,
+                    chosen_answer = currentAnswerButton.text.toString(),
+                    is_answer_correct = 0
+                )
+            }
+                dao.updateAnswerDataRoom(updatedData)
+
+                dao.updateAnswerDataLayout(updatedData)
+
+
+
+
+        }
     }
 
     fun onButtonNextExPressed() {
@@ -98,7 +147,7 @@ class MainViewModel(
 
             dao.insertExerciseData(exerciseDataRoom)
 
-
+//            val exerciseDataLayout = exerciseDataRoom
 
             insertDataInEntityLayout(exerciseDataRoom)
 
