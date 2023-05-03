@@ -9,7 +9,7 @@ import android.widget.Button
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.forEach
-//import androidx.lifecycle.Observer
+import androidx.lifecycle.Observer
 import com.example.study_italian_app_2023.ExercisesFunctions
 import com.example.study_italian_app_2023.MainViewModel
 import com.example.study_italian_app_2023.R

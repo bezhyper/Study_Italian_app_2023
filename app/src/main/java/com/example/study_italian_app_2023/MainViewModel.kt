@@ -1,6 +1,7 @@
 package com.example.study_italian_app_2023
 
 import android.graphics.Color
+import android.util.Log
 import android.widget.Button
 import androidx.lifecycle.*
 import com.example.study_italian_app_2023.retrofit.entities.DataApi
@@ -19,7 +20,8 @@ class MainViewModel(
 
     private val dao = database.getDao()
 
-    private val indexStart = 1
+
+
 
 
 
@@ -46,6 +48,8 @@ class MainViewModel(
 
         else
             getAndLayoutExercise(_index.value!!)
+
+        Log.d("ADebugTag", "Value: ${count?.plus(1)}")
 
     }
 
@@ -117,22 +121,17 @@ class MainViewModel(
 
     override fun onCleared() {
         CoroutineScope(Dispatchers.IO).launch {
-
-
             dao.resetPrimaryKeyEntityRoom()
-
         }
 
         CoroutineScope(Dispatchers.IO).launch {
             dao.resetPrimaryKeyEntityLayout()
-
         }
-
 
         CoroutineScope(Dispatchers.IO).launch {
             dao.deleteAllInExercises()
-
         }
+
         CoroutineScope(Dispatchers.IO).launch {
             dao.deleteAllInLayout()
         }
