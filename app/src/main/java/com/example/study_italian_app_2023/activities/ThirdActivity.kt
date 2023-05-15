@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.forEach
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelStore
 import com.example.study_italian_app_2023.ExercisesFunctions
 import com.example.study_italian_app_2023.MainViewModel
 import com.example.study_italian_app_2023.R
@@ -29,9 +30,13 @@ class ThirdActivity : AppCompatActivity() {
     }
 
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         bindingClass = ActivityThirdBinding.inflate(layoutInflater).also { setContentView(it.root) }
+
+
 
 
         bindingClass.root.forEach {
@@ -42,6 +47,12 @@ class ThirdActivity : AppCompatActivity() {
 
         mainViewModel.exerciseLayout.observe(this) {
 
+            if (mainViewModel.exerciseLayout.value?.is_answer_correct == null){
+                bindingClass.buttonAnswer1.isEnabled = true
+                bindingClass.buttonAnswer2.isEnabled = true
+                bindingClass.buttonAnswer3.isEnabled = true
+                bindingClass.buttonAnswer4.isEnabled = true
+            }
 
             bindingClass.textSentence.text = mainViewModel.exerciseLayout.value!!.sentens
 
@@ -54,8 +65,36 @@ class ThirdActivity : AppCompatActivity() {
 
 
 
+        mainViewModel.currentChosenAnswer.observe(this) {
+            bindingClass.buttonAnswer1.setBackgroundColor(WHITE)
+            bindingClass.buttonAnswer2.setBackgroundColor(WHITE)
+            bindingClass.buttonAnswer3.setBackgroundColor(WHITE)
+            bindingClass.buttonAnswer4.setBackgroundColor(WHITE)
+
+//            it?.setBackgroundColor(BLUE)
+
+            if (mainViewModel.exerciseLayout.value?.is_answer_correct == 0){
+                it?.setBackgroundColor(RED)
+                bindingClass.buttonAnswer1.isEnabled = false
+                bindingClass.buttonAnswer2.isEnabled = false
+                bindingClass.buttonAnswer3.isEnabled = false
+                bindingClass.buttonAnswer4.isEnabled = false
+            }
+           else if (mainViewModel.exerciseLayout.value?.is_answer_correct == 1) {
+                it?.setBackgroundColor(GREEN)
+                bindingClass.buttonAnswer1.isEnabled = false
+                bindingClass.buttonAnswer2.isEnabled = false
+                bindingClass.buttonAnswer3.isEnabled = false
+                bindingClass.buttonAnswer4.isEnabled = false
+            }
+
+        }
+
+
+
 
         mainViewModel.index.observe(this) {
+
 
             bindingClass.answerCheck.text = it.toString()
 
@@ -70,15 +109,11 @@ class ThirdActivity : AppCompatActivity() {
         }
 
 
-
-
-
-
-
-
 //        mainViewModel.getAndLayoutNewExercise()
 
     }
+
+
 
 
     private val buttonAnswerListener = View.OnClickListener {
@@ -110,7 +145,7 @@ class ThirdActivity : AppCompatActivity() {
             }
 
             R.id.buttonFromThirdToMain -> {
-//                mainViewModel.onButtonFromThirdToMainPressed()
+                mainViewModel.onButtonFromThirdToMainPressed()
                 val intent = Intent(this@ThirdActivity, MainActivity::class.java)
                 startActivity(intent)
                 // ПОКА ЧТО ИНТЕНТ БУДЕТ ЗДЕСЬ!

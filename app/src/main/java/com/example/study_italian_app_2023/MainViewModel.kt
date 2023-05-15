@@ -21,7 +21,10 @@ class MainViewModel(
     private val dao = database.getDao()
 
 
+    private var _currentChosenAnswer = MutableLiveData<Button?>()
+    var currentChosenAnswer: LiveData<Button?> = _currentChosenAnswer
 
+        var listOfButtons = mutableListOf<Button?>()
 
 
 
@@ -37,19 +40,18 @@ class MainViewModel(
     var exerciseLayout: LiveData<ExerciseDataEntityLayout> = _exerciseLayout
 
 
-
-
     private val test = _index.observeForever {
 
         val count = dao.getExerciseWithoutFlow()?.count ?: 0
 
-        if ((_index.value == count.plus(1)))
+        if ((_index.value == count.plus(1))) {
             getAndLayoutNewExercise()
-
-        else
+            listOfButtons.add(null)
+        } else
             getAndLayoutExercise(_index.value!!)
 
-        Log.d("ADebugTag", "Value: ${count?.plus(1)}")
+        _currentChosenAnswer.value = listOfButtons[_index.value!!.minus(1)]
+
 
     }
 
@@ -65,23 +67,54 @@ class MainViewModel(
     }
 
 
-
-
     fun onButtonAnswerPressed(currentAnswerButton: Button) {
-        checkAnswer(currentAnswerButton, _index.value!!)
+
+        val deferred = CompletableDeferred<Unit>()
 
 
 
 
 
+        viewModelScope.launch {
 
+            checkAnswer(currentAnswerButton, _index.value!!, deferred)
+            deferred.await()
+
+            val exercise = dao.getExercise(_index.value!!)
+
+
+
+            _exerciseLayout.setValue(exercise)
+
+
+            listOfButtons.set(_index.value!!.minus(1), currentAnswerButton)
+
+            _currentChosenAnswer.value = listOfButtons[_index.value!!.minus(1)]
+
+
+            Log.d(
+                "ADebugTag",
+                "Value: ${_exerciseLayout.value?.is_answer_correct ?: "ало паказивай да ченить"}"
+            )
+
+            Log.d(
+                "ADebugTag",
+                "SIZE: ${listOfButtons.size} VALUES: ${listOfButtons}"
+            )
+
+
+        }
 
 
     }
 
-    private fun checkAnswer(currentAnswerButton: Button, _index: Int) {
+    private fun checkAnswer(
+        currentAnswerButton: Button,
+        _index: Int,
+        deferred: CompletableDeferred<Unit>
+    ) {
         viewModelScope.launch {
-            val updatedData : UpdateExerciseDataInTuple
+            val updatedData: UpdateExerciseDataInTuple
             val exercise = dao.getExercise(_index)
 
             if (currentAnswerButton.text == exercise.correct) {
@@ -90,22 +123,26 @@ class MainViewModel(
                     count = exercise.count,
                     chosen_answer = currentAnswerButton.text.toString(),
                     is_answer_correct = 1
+
                 )
-            }else{
+
+                val idTask = dao.getExerciseRoom(_index).id
+                repository.postRightCompletedExercise(1, idTask!!)
+
+            } else {
                 updatedData = UpdateExerciseDataInTuple(
                     count = exercise.count,
                     chosen_answer = currentAnswerButton.text.toString(),
                     is_answer_correct = 0
                 )
             }
-                dao.updateAnswerDataRoom(updatedData)
+            dao.updateAnswerDataRoom(updatedData)
 
-                dao.updateAnswerDataLayout(updatedData)
+            dao.updateAnswerDataLayout(updatedData)
 
-
-
-
+            deferred.complete(Unit)
         }
+
     }
 
     fun onButtonNextExPressed() {
@@ -135,6 +172,8 @@ class MainViewModel(
         CoroutineScope(Dispatchers.IO).launch {
             dao.deleteAllInLayout()
         }
+
+
     }
 
     fun getAndLayoutNewExercise() {
@@ -146,7 +185,6 @@ class MainViewModel(
 
             dao.insertExerciseData(exerciseDataRoom)
 
-//            val exerciseDataLayout = exerciseDataRoom
 
             insertDataInEntityLayout(exerciseDataRoom)
 
@@ -203,6 +241,10 @@ class MainViewModel(
         }.await()
         return@runBlocking answer
 
+    }
+
+    fun onButtonFromThirdToMainPressed() {
+        onCleared()
     }
 
     class MainViewModelFactory(
