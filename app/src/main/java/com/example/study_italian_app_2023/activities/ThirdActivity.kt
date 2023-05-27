@@ -15,14 +15,20 @@ import com.example.study_italian_app_2023.ExercisesFunctions
 import com.example.study_italian_app_2023.MainViewModel
 import com.example.study_italian_app_2023.R
 import com.example.study_italian_app_2023.databinding.ActivityThirdBinding
+import com.example.study_italian_app_2023.retrofit.entities.DataApi
+import com.example.study_italian_app_2023.retrofit.entities.MyNetworkRequest
+import com.example.study_italian_app_2023.retrofit.entities.MyRepository
 
 
 class ThirdActivity : AppCompatActivity() {
+    val myNetworkRequest: MyNetworkRequest
+        get() = MyNetworkRequest((applicationContext as MainApp).repository)
+
     private lateinit var bindingClass: ActivityThirdBinding
     private val mainViewModel: MainViewModel by viewModels {
         MainViewModel.MainViewModelFactory(
             (applicationContext as MainApp).database,
-            (applicationContext as MainApp).repository,
+            MyRepository(myNetworkRequest),
             exercisesFunctions = ExercisesFunctions()
         )
 //        MainViewModel.MainViewModelFactory(exercisesFunctions = ExercisesFunctions(), database)

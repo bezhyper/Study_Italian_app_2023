@@ -1,20 +1,24 @@
 package com.example.study_italian_app_2023
 
-import android.graphics.Color
+import android.provider.ContactsContract.Data
 import android.util.Log
 import android.widget.Button
 import androidx.lifecycle.*
 import com.example.study_italian_app_2023.retrofit.entities.DataApi
+import com.example.study_italian_app_2023.retrofit.entities.AsyncResult
+import com.example.study_italian_app_2023.retrofit.entities.MyRepository
 import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityLayout
 import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityRoom
 import com.example.study_italian_app_2023.room.entities.MainDataBase
 import com.example.study_italian_app_2023.room.entities.UpdateExerciseDataInTuple
 import kotlinx.coroutines.*
+import retrofit2.HttpException
+import java.io.IOException
 
-//private val exercisesFunctions: ExercisesFunctions, database: MainDataBase - поместить в конструктор что ниже
+
 class MainViewModel(
     database: MainDataBase,
-    val repository: DataApi,
+    val repository: MyRepository,
     private val exercisesFunctions: ExercisesFunctions
 ) : ViewModel() {
 
@@ -24,8 +28,7 @@ class MainViewModel(
     private var _currentChosenAnswer = MutableLiveData<Button?>()
     var currentChosenAnswer: LiveData<Button?> = _currentChosenAnswer
 
-        var listOfButtons = mutableListOf<Button?>()
-
+    var listOfButtons = mutableListOf<Button?>()
 
 
 //    private var _chosenAnswersList = MutableLiveData<List<Button>>()
@@ -178,16 +181,28 @@ class MainViewModel(
 
     fun getAndLayoutNewExercise() {
         viewModelScope.launch {
-            val exerciseDataRepository = repository.getRandomExercise(1)
-            val exerciseDataRoom = exerciseDataRepository.toExerciseData()
+
+            try {
+                val exerciseDataRepository = repository.getRandomExercise()
+
+                val exerciseDataRoom = exerciseDataRepository.toExerciseData()
 
 
 
-            dao.insertExerciseData(exerciseDataRoom)
+                dao.insertExerciseData(exerciseDataRoom)
 
 
-            insertDataInEntityLayout(exerciseDataRoom)
+                insertDataInEntityLayout(exerciseDataRoom)
 
+            } catch (e: IOException) {
+                Log.e("Network Error", e.message, e)
+
+
+            } catch (e: HttpException) {
+                Log.e("HTTP Error", e.message, e)
+            }catch (e: Exception) {
+                Log.e("Retrofit Error", e.message, e)
+            }
         }
     }
 
@@ -249,7 +264,7 @@ class MainViewModel(
 
     class MainViewModelFactory(
         val database: MainDataBase,
-        val repository: DataApi,
+        val repository: MyRepository,
         private val exercisesFunctions: ExercisesFunctions
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

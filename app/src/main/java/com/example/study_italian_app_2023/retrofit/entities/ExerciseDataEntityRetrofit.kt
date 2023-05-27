@@ -52,8 +52,5 @@ data class ExerciseDataEntityRetrofit(
         wrong_3 = wrong_3
     )
 
-    fun exerciseDataUpdateTuple() {
 
-
-    }
 }

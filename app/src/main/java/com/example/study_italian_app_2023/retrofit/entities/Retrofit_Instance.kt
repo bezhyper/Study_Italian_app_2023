@@ -28,11 +28,4 @@ abstract class Retrofit_Instance {
 
 
 
-//
-//        val retrofitApi = Retrofit.Builder()
-//            .baseUrl(BASE_URL)
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .build()
-//
-//
 }
