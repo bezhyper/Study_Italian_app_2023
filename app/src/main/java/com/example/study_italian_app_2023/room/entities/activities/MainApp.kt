@@ -1,7 +1,8 @@
-package com.example.study_italian_app_2023.activities
+package com.example.study_italian_app_2023.room.entities.activities
 
 import android.app.Application
 import com.example.study_italian_app_2023.retrofit.entities.Retrofit_Instance
+import com.example.study_italian_app_2023.room.entities.DataBaseAssets
 import com.example.study_italian_app_2023.room.entities.MainDataBase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,8 +11,9 @@ import kotlinx.coroutines.launch
 class MainApp: Application() {
     val database by lazy { MainDataBase.getDataBase(this) }
     val repository by lazy{ Retrofit_Instance.getInstance()}
+    val databaseAssets by lazy{DataBaseAssets.getDataBase(this)}
 
-//    retrofitApi.create(DataApi::class.java
+
 
 
 

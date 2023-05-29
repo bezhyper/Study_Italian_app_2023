@@ -1,4 +1,4 @@
-package com.example.study_italian_app_2023.activities
+package com.example.study_italian_app_2023.room.entities.activities
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity

@@ -1,28 +1,27 @@
 package com.example.study_italian_app_2023
 
-import android.provider.ContactsContract.Data
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Log
 import android.widget.Button
 import androidx.lifecycle.*
-import com.example.study_italian_app_2023.retrofit.entities.DataApi
-import com.example.study_italian_app_2023.retrofit.entities.AsyncResult
 import com.example.study_italian_app_2023.retrofit.entities.MyRepository
-import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityLayout
-import com.example.study_italian_app_2023.room.entities.ExerciseDataEntityRoom
-import com.example.study_italian_app_2023.room.entities.MainDataBase
-import com.example.study_italian_app_2023.room.entities.UpdateExerciseDataInTuple
+import com.example.study_italian_app_2023.room.entities.*
 import kotlinx.coroutines.*
 import retrofit2.HttpException
 import java.io.IOException
+import kotlin.random.Random
 
 
 class MainViewModel(
     database: MainDataBase,
+    databaseAssets: DataBaseAssets,
     val repository: MyRepository,
     private val exercisesFunctions: ExercisesFunctions
 ) : ViewModel() {
 
     private val dao = database.getDao()
+    private val daoAssets = databaseAssets.getDao()
 
 
     private var _currentChosenAnswer = MutableLiveData<Button?>()
@@ -75,9 +74,6 @@ class MainViewModel(
         val deferred = CompletableDeferred<Unit>()
 
 
-
-
-
         viewModelScope.launch {
 
             checkAnswer(currentAnswerButton, _index.value!!, deferred)
@@ -93,17 +89,6 @@ class MainViewModel(
             listOfButtons.set(_index.value!!.minus(1), currentAnswerButton)
 
             _currentChosenAnswer.value = listOfButtons[_index.value!!.minus(1)]
-
-
-            Log.d(
-                "ADebugTag",
-                "Value: ${_exerciseLayout.value?.is_answer_correct ?: "ало паказивай да ченить"}"
-            )
-
-            Log.d(
-                "ADebugTag",
-                "SIZE: ${listOfButtons.size} VALUES: ${listOfButtons}"
-            )
 
 
         }
@@ -129,8 +114,19 @@ class MainViewModel(
 
                 )
 
-                val idTask = dao.getExerciseRoom(_index).id
-                repository.postRightCompletedExercise(1, idTask!!)
+//                val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//                val network = connectivityManager.activeNetwork
+//                val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
+//
+//                if (networkCapabilities != null && networkCapabilities.hasCapability(
+//                        NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+//                    val idTask = dao.getExerciseRoom(_index).id
+//                    repository.postRightCompletedExercise(1, idTask!!)
+//                }
+
+
+//                val idTask = dao.getExerciseRoom(_index).id
+//                repository.postRightCompletedExercise(1, idTask!!)
 
             } else {
                 updatedData = UpdateExerciseDataInTuple(
@@ -196,7 +192,7 @@ class MainViewModel(
 
             } catch (e: IOException) {
                 Log.e("Network Error", e.message, e)
-
+                getExerciseFromAssets()
 
             } catch (e: HttpException) {
                 Log.e("HTTP Error", e.message, e)
@@ -204,6 +200,25 @@ class MainViewModel(
                 Log.e("Retrofit Error", e.message, e)
             }
         }
+    }
+
+    private fun getExerciseFromAssets(){
+        viewModelScope.launch {
+
+
+
+            val randomNumber =  Random.nextInt(1, 1858)
+
+            val exercise = daoAssets.getExercise(randomNumber)
+            val exerciseDataRoom = exercise.toExerciseData()
+
+            dao.insertExerciseData(exerciseDataRoom)
+
+            insertDataInEntityLayout(exerciseDataRoom)
+
+
+        }
+
     }
 
     private fun insertDataInEntityLayout(exerciseDataRoom: ExerciseDataEntityRoom) {
@@ -264,14 +279,15 @@ class MainViewModel(
 
     class MainViewModelFactory(
         val database: MainDataBase,
+        val databaseAssets: DataBaseAssets,
         val repository: MyRepository,
         private val exercisesFunctions: ExercisesFunctions
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                //, database поместить в конструктор ниже
-                return MainViewModel(database, repository, exercisesFunctions) as T
+
+                return MainViewModel(database, databaseAssets, repository, exercisesFunctions) as T
             }
             throw IllegalArgumentException("Unknown ViewModelClass")
         }

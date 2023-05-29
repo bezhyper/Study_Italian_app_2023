@@ -34,6 +34,10 @@ interface Dao {
     fun getExerciseRoom(i: Int): ExerciseDataEntityRoom
 
 
+    @Query("SELECT * FROM exercises  WHERE count = :i")
+    fun getExerciseRoomFromAssets(i: Int): ExerciseDataEntityRoom
+
+
 
 
 

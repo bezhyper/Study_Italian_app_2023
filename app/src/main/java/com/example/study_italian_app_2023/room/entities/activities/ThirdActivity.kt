@@ -1,4 +1,4 @@
-package com.example.study_italian_app_2023.activities
+package com.example.study_italian_app_2023.room.entities.activities
 
 import android.content.Intent
 import android.graphics.Color
@@ -28,6 +28,7 @@ class ThirdActivity : AppCompatActivity() {
     private val mainViewModel: MainViewModel by viewModels {
         MainViewModel.MainViewModelFactory(
             (applicationContext as MainApp).database,
+            (applicationContext as MainApp).databaseAssets,
             MyRepository(myNetworkRequest),
             exercisesFunctions = ExercisesFunctions()
         )
