@@ -12,7 +12,7 @@ class ExerciseDataEntityLayout(
     val count: Int? = null,
 
     @ColumnInfo(name = "sentens")
-    val sentens: String? = null,
+    var sentens: String? = null,
 
     @ColumnInfo(name = "b1")
     val b1: String? = null,

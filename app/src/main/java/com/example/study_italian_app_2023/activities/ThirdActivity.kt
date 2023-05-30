@@ -1,8 +1,10 @@
-package com.example.study_italian_app_2023.room.entities.activities
+package com.example.study_italian_app_2023.activities
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Color.*
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -13,6 +15,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelStore
 import com.example.study_italian_app_2023.ExercisesFunctions
 import com.example.study_italian_app_2023.MainViewModel
+import com.example.study_italian_app_2023.NetworkStateManager
 import com.example.study_italian_app_2023.R
 import com.example.study_italian_app_2023.databinding.ActivityThirdBinding
 import com.example.study_italian_app_2023.retrofit.entities.DataApi
@@ -21,6 +24,11 @@ import com.example.study_italian_app_2023.retrofit.entities.MyRepository
 
 
 class ThirdActivity : AppCompatActivity() {
+
+    private lateinit var connectivityManager: ConnectivityManager
+    private lateinit var networkStateManager: NetworkStateManager
+
+
     val myNetworkRequest: MyNetworkRequest
         get() = MyNetworkRequest((applicationContext as MainApp).repository)
 
@@ -30,10 +38,9 @@ class ThirdActivity : AppCompatActivity() {
             (applicationContext as MainApp).database,
             (applicationContext as MainApp).databaseAssets,
             MyRepository(myNetworkRequest),
-            exercisesFunctions = ExercisesFunctions()
+            exercisesFunctions = ExercisesFunctions(),
+            networkStateManager = networkStateManager
         )
-//        MainViewModel.MainViewModelFactory(exercisesFunctions = ExercisesFunctions(), database)
-//       MainViewModel.MainViewModelFactory((context.applicationContext as MainApp).database)
     }
 
 
@@ -43,7 +50,8 @@ class ThirdActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         bindingClass = ActivityThirdBinding.inflate(layoutInflater).also { setContentView(it.root) }
 
-
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        networkStateManager = NetworkStateManager(connectivityManager)
 
 
         bindingClass.root.forEach {
@@ -95,7 +103,9 @@ class ThirdActivity : AppCompatActivity() {
                 bindingClass.buttonAnswer4.isEnabled = false
             }
 
+
         }
+
 
 
 
@@ -116,8 +126,18 @@ class ThirdActivity : AppCompatActivity() {
         }
 
 
-//        mainViewModel.getAndLayoutNewExercise()
 
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+        mainViewModel.startMonitoringNetworkState()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mainViewModel.stopMonitoringNetworkState()
     }
 
 

@@ -1,4 +1,4 @@
-package com.example.study_italian_app_2023.room.entities.activities
+package com.example.study_italian_app_2023.activities
 
 import android.app.Application
 import com.example.study_italian_app_2023.retrofit.entities.Retrofit_Instance

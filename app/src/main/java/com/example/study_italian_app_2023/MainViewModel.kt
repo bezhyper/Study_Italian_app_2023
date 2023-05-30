@@ -17,11 +17,37 @@ class MainViewModel(
     database: MainDataBase,
     databaseAssets: DataBaseAssets,
     val repository: MyRepository,
-    private val exercisesFunctions: ExercisesFunctions
+    private val exercisesFunctions: ExercisesFunctions,
+    private val networkStateManager: NetworkStateManager
 ) : ViewModel() {
+
+    private val _isConnected = MutableLiveData<Boolean>()
+    val isConnected: LiveData<Boolean>
+        get() = _isConnected
+
+    init {
+        networkStateManager.getNetworkStateLiveData().observeForever { networkState ->
+            _isConnected.value = networkState.isConnected
+        }
+    }
+    fun startMonitoringNetworkState() {
+        networkStateManager.startMonitoring()
+    }
+
+    fun stopMonitoringNetworkState() {
+        networkStateManager.stopMonitoring()
+    }
+
+
+
+
+
+
+
 
     private val dao = database.getDao()
     private val daoAssets = databaseAssets.getDao()
+
 
 
     private var _currentChosenAnswer = MutableLiveData<Button?>()
@@ -61,7 +87,13 @@ class MainViewModel(
         viewModelScope.launch {
 //            _chosenAnswersList?.value.
 
-            val exercise = dao.getExercise(_index)
+            var exercise = dao.getExercise(_index)
+
+            if (exercise.chosen_answer != null){
+                exercise.sentens = exercise.sentens!!.replace("<пропуск>",exercise.chosen_answer!!)
+            }else
+            exercise.sentens = exercise.sentens!!.replace("<пропуск>","_______")
+
 
             _exerciseLayout.value = exercise
 
@@ -80,6 +112,8 @@ class MainViewModel(
             deferred.await()
 
             val exercise = dao.getExercise(_index.value!!)
+
+            exercise.sentens = exercise.sentens!!.replace("<пропуск>",exercise.chosen_answer!!)
 
 
 
@@ -114,19 +148,10 @@ class MainViewModel(
 
                 )
 
-//                val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-//                val network = connectivityManager.activeNetwork
-//                val networkCapabilities = connectivityManager.getNetworkCapabilities(network)
-//
-//                if (networkCapabilities != null && networkCapabilities.hasCapability(
-//                        NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-//                    val idTask = dao.getExerciseRoom(_index).id
-//                    repository.postRightCompletedExercise(1, idTask!!)
-//                }
-
-
-//                val idTask = dao.getExerciseRoom(_index).id
-//                repository.postRightCompletedExercise(1, idTask!!)
+                if (_isConnected.value == true) {
+                    val idTask = dao.getExerciseRoom(_index).id
+                    repository.postRightCompletedExercise(1, idTask!!)
+                }
 
             } else {
                 updatedData = UpdateExerciseDataInTuple(
@@ -134,6 +159,9 @@ class MainViewModel(
                     chosen_answer = currentAnswerButton.text.toString(),
                     is_answer_correct = 0
                 )
+
+
+
             }
             dao.updateAnswerDataRoom(updatedData)
 
@@ -210,6 +238,7 @@ class MainViewModel(
             val randomNumber =  Random.nextInt(1, 1858)
 
             val exercise = daoAssets.getExercise(randomNumber)
+
             val exerciseDataRoom = exercise.toExerciseData()
 
             dao.insertExerciseData(exerciseDataRoom)
@@ -231,7 +260,7 @@ class MainViewModel(
             val b4 = getRandomAnswer(listAnswers)
 
 
-            val exercise = ExerciseDataEntityLayout(
+            var exercise = ExerciseDataEntityLayout(
                 sentens = exerciseDataRoom.sentens,
                 b1 = b1,
                 b2 = b2,
@@ -240,7 +269,16 @@ class MainViewModel(
                 correct = exerciseDataRoom.correct
             )
 
+
+
+
+
             dao.insertExerciseDataLayout(exercise)
+
+
+
+
+            exercise.sentens = exercise.sentens!!.replace("<пропуск>","_______")
 
             _exerciseLayout.value = exercise
 
@@ -281,13 +319,14 @@ class MainViewModel(
         val database: MainDataBase,
         val databaseAssets: DataBaseAssets,
         val repository: MyRepository,
-        private val exercisesFunctions: ExercisesFunctions
+        private val exercisesFunctions: ExercisesFunctions,
+        private val networkStateManager: NetworkStateManager
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
 
-                return MainViewModel(database, databaseAssets, repository, exercisesFunctions) as T
+                return MainViewModel(database, databaseAssets, repository, exercisesFunctions, networkStateManager) as T
             }
             throw IllegalArgumentException("Unknown ViewModelClass")
         }
